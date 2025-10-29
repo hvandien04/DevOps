@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   backend:
-    image: ${REGISTRY_URL}/smartvet/backend:latest
+    image: ${REGISTRY_URL}/devops/backend:latest
     build:
       context: ./Backend-SmartVetSystem
     container_name: smartvet-backend
