@@ -12,31 +12,6 @@ services:
       SPRING_PROFILES_ACTIVE: dev
     networks:
       - smartvet-network
-
-  frontend:
-    image: smartvet/frontend
-    build:
-      context: ./Frontend-SmartVetSystem
-    container_name: smartvet-frontend
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
-      - serverai
-    networks:
-      - smartvet-network
-
-  serverai:
-    image: smartvet/serverai
-    build:
-      context: ./Disease Prediction AI
-    container_name: smartvet-serverai
-    ports:
-      - "5000:5000"
-      - "8000:8000"
-    networks:
-      - smartvet-network
-
 volumes:
   db-data:
 
