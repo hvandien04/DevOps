@@ -1,0 +1,54 @@
+name: CI/CD Build & Deploy to EC2 via Harbor
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build project
+        run: mvn -B package --file pom.xml
+
+      - name: Login to Harbor
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest .
+
+      - name: Push Image to Harbor
+        run: docker push ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH private key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }};
+            docker pull ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest;
+            docker stop identify-service || true;
+            docker rm identify-service || true;
+            docker run -d --name identify-service -p 8080:8080 ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest;
+          "
