@@ -1,43 +1,40 @@
-name: CI/CD Build & Deploy to EC2 via Harbor
+name: CI/CD Build & Deploy (Harbor devops)
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "Backend-SmartVetSystem/**"
+      - ".github/workflows/**"
+      - "docker-compose.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Build project
-        run: mvn -B package --file pom.xml
-
-      - name: Login to Harbor
+      - name: Login Harbor
         run: |
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
 
-      - name: Build Docker Image
+      - name: Build image
         run: |
-          docker build -t ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest .
+          IMAGE=${{ secrets.REGISTRY_URL }}/devops/smartvet-backend
+          docker build -t ${IMAGE}:latest ./Backend-SmartVetSystem
+          docker tag ${IMAGE}:latest ${IMAGE}:${{ github.sha }}
 
-      - name: Push Image to Harbor
-        run: docker push ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest
+      - name: Push image
+        run: |
+          IMAGE=${{ secrets.REGISTRY_URL }}/devops/smartvet-backend
+          docker push ${IMAGE}:latest
+          docker push ${IMAGE}:${{ github.sha }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup SSH private key
+      - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
@@ -45,10 +42,16 @@ jobs:
 
       - name: Deploy on EC2
         run: |
+          IMAGE=${{ secrets.REGISTRY_URL }}/devops/smartvet-backend
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            set -e
             docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }};
-            docker pull ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest;
-            docker stop identify-service || true;
-            docker rm identify-service || true;
-            docker run -d --name identify-service -p 8080:8080 ${{ secrets.REGISTRY_URL }}/devops/identify-service:latest;
+            docker pull ${IMAGE}:latest;
+            docker stop smartvet-backend || true;
+            docker rm smartvet-backend || true;
+            docker run -d --name smartvet-backend \
+              -p 8080:8080 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              --restart=always \
+              ${IMAGE}:latest;
           "
