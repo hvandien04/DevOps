@@ -27,6 +27,7 @@ jobs:
           SPRING_PROFILES_ACTIVE: test
         run: mvn -B -q -DskipITs test
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
