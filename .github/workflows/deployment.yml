@@ -45,11 +45,11 @@ jobs:
           IMAGE=${{ secrets.REGISTRY_URL }}/devops/smartvet-backend
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             set -e
-            docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }};
-            docker pull ${IMAGE}:latest;
-            docker stop smartvet-backend || true;
-            docker rm smartvet-backend || true;
-            docker run -d --name smartvet-backend \
+            sudo docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} -p ${{ secrets.REGISTRY_PASSWORD }};
+            sudo docker pull ${IMAGE}:latest;
+            sudo docker stop smartvet-backend || true;
+            sudo docker rm smartvet-backend || true;
+            sudo docker run -d --name smartvet-backend \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
               --env-file /opt/smartvet/.env\
