@@ -52,6 +52,7 @@ jobs:
             docker run -d --name smartvet-backend \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
+              --env-file /opt/smartvet/.env\
               --restart=always \
               ${IMAGE}:latest;
           "
