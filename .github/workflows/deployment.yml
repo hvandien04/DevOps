@@ -8,7 +8,9 @@ on:
       - ".github/workflows/**"
       - "docker-compose.yml"
 
-test:
+
+jobs:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,9 +23,6 @@ test:
         env:
           SPRING_PROFILES_ACTIVE: test
         run: mvn -B -q -DskipITs test
-
-
-jobs:
   build:
     runs-on: ubuntu-latest
     steps:
