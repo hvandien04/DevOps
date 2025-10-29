@@ -1,19 +1,15 @@
 version: '3.8'
-
 services:
   backend:
-    image: smartvet/backend
+    image: ${REGISTRY_URL}/smartvet/backend:latest
     build:
       context: ./Backend-SmartVetSystem
     container_name: smartvet-backend
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: prod
     networks:
       - smartvet-network
-volumes:
-  db-data:
-
 networks:
   smartvet-network:
