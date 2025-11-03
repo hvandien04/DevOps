@@ -20,7 +20,7 @@ test:
       - name: Run unit & mock tests
         env:
           SPRING_PROFILES_ACTIVE: test
-        run: mvn -B -q -DskipITs test
+        run: mvn -B -q -DskipITs tests
 
 
 jobs:

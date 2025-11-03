@@ -36,7 +36,7 @@ public class PetControllerTest {
     //test DEV_FEATURE
     //test DEV_FEATURE
 
-    @MockitoBean
+    @MockitoBea
     private PetService petService;
 
     @Autowired
